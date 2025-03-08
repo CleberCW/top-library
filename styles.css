@@ -45,6 +45,10 @@ tr td:last-child {
   min-width: 20ch;
 }
 
+.table-id {
+  max-width: 4ch;
+}
+
 .modal-container {
   background-color: rgba(0, 0, 0, 0.3);
   position: fixed;
@@ -116,6 +120,8 @@ button:active {
   display: block;
   margin-right: 0;
   margin-left: auto;
+  background-color: rgb(248, 119, 119);
+  color: white;
 }
 
 .modal {
