@@ -1,87 +1,85 @@
-//Using classes
+// Using factory functions (and IIFE)
 
-class Library {
-  books = [];
+const library = (function () {
+  let id = 1;
+  let books = localStorage.books ? JSON.parse(localStorage.books) : [];
 
-  displayBooks() {
+  function displayBooks() {
     const bookTable = document.querySelector("#book-list tbody");
     bookTable.innerHTML = "";
 
-    this.books.forEach((book, index) => {
+    books.forEach((book, index) => {
       const newRow = bookTable.insertRow();
+      newRow.dataset.index = index;
       for (let key in book) {
         const cell = newRow.insertCell();
         cell.textContent =
-          key == "isRead" ? (book[key] == true ? "Yes" : "No") : book[key];
+          key == "isRead" ? (book[key] ? "Yes" : "No") : book[key];
       }
+
       const removeButton = document.createElement("button");
       removeButton.innerText = "Remove";
       removeButton.className = "removeButton";
-      removeButton.dataset.index = index;
 
       const changeReadStatus = document.createElement("button");
       changeReadStatus.innerText = "Change Read Status";
       changeReadStatus.className = "changeReadStatus";
-      changeReadStatus.dataset.index = index;
 
       const cellButtons = newRow.insertCell();
       cellButtons.appendChild(removeButton);
       cellButtons.appendChild(changeReadStatus);
 
-      if (book.isRead) {
-        newRow.classList.add("read-book-row");
-      } else {
-        newRow.classList.add("not-read-book-row");
-      }
+      if (book.isRead) newRow.classList.add("read-book-row");
+      else newRow.classList.add("not-read-book-row");
     });
   }
 
-  addBook(book) {
-    if (book instanceof Book) {
-      this.books.push(book);
-    }
-    myLibrary.displayBooks();
+  function createBook(title, author, pages, isRead) {
+    const bookId = id++;
+    const book = {
+      id: bookId,
+      title: title,
+      author: author,
+      pages: pages,
+      isRead: isRead,
+    };
+
+    books.push(book);
+    localStorage.setItem("books", JSON.stringify(books));
   }
 
-  removeBook(index) {
-    this.books.splice(index, 1);
-    myLibrary.displayBooks();
+  function toggleRead(index) {
+    const book = books[index];
+    book.isRead = !book.isRead;
+    localStorage.setItem("books", JSON.stringify(books));
   }
 
-  getBook(index) {
-    return this.books[index];
-  }
-}
-
-class Book {
-  static id = 1;
-  constructor(title, author, pages, isRead) {
-    this.id = Book.id++;
-    this.title = title;
-    this.author = author;
-    this.pages = pages;
-    this.isRead = isRead;
+  function removeBook(index) {
+    books.splice(index, 1);
+    localStorage.setItem("books", JSON.stringify(books));
   }
 
-  toggleRead() {
-    this.isRead = !this.isRead;
-  }
-}
-
-const myLibrary = new Library();
-myLibrary.addBook(new Book("Amen", "Anon", 321, false));
+  return {
+    toggleRead,
+    createBook,
+    displayBooks,
+    removeBook,
+  };
+})();
 
 document.addEventListener("click", (e) => {
-  const index = e.target.dataset.index;
-
   if (e.target.classList.contains("removeButton")) {
-    myLibrary.removeBook(index);
-    myLibrary.displayBooks();
+    const row = e.target.closest("tr");
+    const index = row.dataset.index;
+    library.removeBook(index);
+    library.displayBooks();
   }
 
   if (e.target.classList.contains("changeReadStatus")) {
-    myLibrary.getBook(index).toggleRead();
-    myLibrary.displayBooks();
+    const row = e.target.closest("tr");
+    const index = row.dataset.index;
+    library.toggleRead(index);
+    library.displayBooks();
   }
 
   if (e.target.classList.contains("toggleModal")) {
@@ -104,12 +102,12 @@ document
         : false;
 
     if ((bookTitle, bookAuthor, bookPages)) {
-      newBook = new Book(bookTitle, bookAuthor, bookPages, bookHasRead);
-      myLibrary.addBook(newBook);
+      library.createBook(bookTitle, bookAuthor, bookPages, bookHasRead);
+      library.displayBooks();
     }
     const modal = document.querySelector("#bookForm");
     modal.classList.toggle("hidden");
     document.querySelector("form").reset();
   });
 
-myLibrary.displayBooks();
+library.displayBooks();
